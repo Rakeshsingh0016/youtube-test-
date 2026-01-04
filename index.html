@@ -14,39 +14,50 @@
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
 <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-    <h2 class="text-2xl font-bold mb-4 text-center text-blue-600">YouTube Comment Finder <i class="fas fa-comment-dots"></i></h2>
-    
-    <input type="text" id="video" placeholder="Video ID" 
+    <h2 class="text-2xl font-bold mb-4 text-center text-blue-600">
+        YouTube Comment Finder <i class="fas fa-comment-dots"></i>
+    </h2>
+
+    <input type="text" id="video_url" placeholder="Paste YouTube Video Link" 
         class="w-full p-3 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
     
-    <input type="text" id="keyword" placeholder="Keyword" 
+    <input type="text" id="keyword" placeholder="Optional: Keyword" 
         class="w-full p-3 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
-    
+
     <button onclick="fetchComment()" 
         class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center">
         <i class="fas fa-search mr-2"></i> Find Comment
     </button>
-    
+
     <p id="result" class="mt-6 p-4 border rounded shadow-lg bg-gray-50 animate-fadeIn"></p>
 </div>
 
 <script>
 async function fetchComment() {
-    const video = document.getElementById("video").value;
-    const keyword = document.getElementById("keyword").value || "nice";
+    const video_url = document.getElementById("video_url").value;
+    const keyword = document.getElementById("keyword").value;
     const resultEl = document.getElementById("result");
-    
+
     resultEl.innerHTML = "Loading... <i class='fas fa-spinner fa-spin'></i>";
-    
+
     try {
-        const response = await fetch(`/get_comment?video=${video}&keyword=${keyword}`);
+        const response = await fetch(`/get_comment?video_url=${encodeURIComponent(video_url)}&keyword=${encodeURIComponent(keyword)}`);
         const data = await response.json();
-        resultEl.innerHTML = `
-            <i class="fas fa-thumbs-up text-green-500"></i>
-            <strong>${data.text || 'No comment found!'}</strong>
-            <br>
-            Likes: ${data.likes || 0}
-        `;
+
+        if(data.error) {
+            resultEl.innerHTML = `<i class="fas fa-exclamation-triangle text-red-500"></i> ${data.error}`;
+        } else if(!data.text) {
+            resultEl.innerHTML = `<i class="fas fa-info-circle text-yellow-500"></i> No comment found!`;
+        } else {
+            resultEl.innerHTML = `
+                <i class="fas fa-thumbs-up text-green-500"></i>
+                <strong>${data.text}</strong>
+                <br>
+                Likes: ${data.likes}
+                <br>
+                Author: ${data.author}
+            `;
+        }
     } catch(err) {
         resultEl.innerHTML = "Error fetching comment! <i class='fas fa-exclamation-triangle text-red-500'></i>";
         console.error(err);
